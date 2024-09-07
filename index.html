@@ -1,0 +1,357 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enhanced Interactive Image and Video Carousel</title>
+    <style>
+        html, body {
+            padding: 0;
+            margin: 0;
+            height: 100vh;
+            font-family: Arial, sans-serif;
+            background-color: transparent;
+	    
+        }
+
+        /* Background SVG Wrapper */
+        #bg-wrap {
+            position: fixed; /* Fix the background to the viewport */
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1; /* Ensure background is behind everything */
+        }
+
+        .carousel-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            position: relative;
+            z-index: 1; /* Ensure carousels are above the background */
+	    
+        }
+
+        .carousel {
+            position: relative;
+            width: 100%;
+            height: 400px;
+            margin-bottom: 50px;
+            border-radius: 10px;
+            z-index: 10; /* Ensure carousel is above the background */
+            overflow: hidden;
+            background-color: transparent; /* Remove the background entirely */
+            box-shadow: none; /* No shadow for the carousel itself */
+	    
+        }
+
+        .carousel__list {
+            display: flex;
+            list-style: none;
+            position: relative;
+            width: 100%;
+            height: 100%;
+            justify-content: center;
+            align-items: center;
+            perspective: 300px;
+            margin: 0;
+            padding: 0;
+        }
+
+        .carousel__item {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 250px;
+            height: 250px;
+            border-radius: 12px;
+            box-shadow: 0px 2px 8px 0px rgba(50, 50, 50, 0.5);
+            position: absolute;
+            transition: all .3s ease-in;
+            overflow: hidden;
+            z-index: 5; /* Ensure items are above the background */
+            background-color: rgba(255, 255, 255, 0.3); /* Semi-transparent background for items */
+	    
+        }
+
+        .carousel__item img, .carousel__item iframe {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center;
+            background-color: transparent; /* Ensure the media content is transparent */
+	    
+        }
+
+        .carousel__item[data-pos="0"] {
+            z-index: 5;
+            transform: scale(1.1);
+            background-color: rgba(255, 255, 255, 0.6); /* Slightly more opaque for focus */
+        }
+
+        .carousel__item[data-pos="-1"],
+        .carousel__item[data-pos="1"] {
+            opacity: 0.7;
+            filter: blur(1px) grayscale(10%);
+        }
+
+        .carousel__item[data-pos="-1"] {
+            transform: translateX(-50%) scale(.9);
+            z-index: 4;
+        }
+
+        .carousel__item[data-pos="1"] {
+            transform: translateX(50%) scale(.9);
+            z-index: 4;
+        }
+
+        .carousel__item[data-pos="-2"],
+        .carousel__item[data-pos="2"] {
+            opacity: 0.4;
+            filter: blur(3px) grayscale(20%);
+        }
+
+        .carousel__item[data-pos="-2"] {
+            transform: translateX(-85%) scale(.8);
+            z-index: 3;
+        }
+
+        .carousel__item[data-pos="2"] {
+            transform: translateX(85%) scale(.8);
+            z-index: 3;
+        }
+
+        .carousel__item:not([data-pos="-2"]):not([data-pos="-1"]):not([data-pos="0"]):not([data-pos="1"]):not([data-pos="2"]) {
+            opacity: 0;
+            transform: translateX(-50%) scale(0.8);
+        }
+
+        .nav-button {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background-color: rgba(255, 255, 255, 0.7);
+            border: none;
+            font-size: 24px;
+            padding: 10px 15px;
+            cursor: pointer;
+            z-index: 10;
+            transition: background-color 0.3s;
+        }
+
+        .nav-button:hover {
+            background-color: rgba(255, 255, 255, 0.9);
+        }
+
+        .nav-button.prev {
+            left: 10px;
+        }
+
+        .nav-button.next {
+            right: 10px;
+        }
+
+        h2 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div id="bg-wrap">
+        <svg viewBox="0 0 100 100" preserveAspectRatio="xMidYMid slice">
+            <defs>
+                <radialGradient id="Gradient1" cx="50%" cy="50%" fx="0.441602%" fy="50%" r=".5">
+                    <animate attributeName="fx" dur="34s" values="0%;3%;0%" repeatCount="indefinite"></animate>
+                    <stop offset="0%" stop-color="rgba(255, 0, 255, 1)"></stop>
+                    <stop offset="100%" stop-color="rgba(255, 0, 255, 0)"></stop>
+                </radialGradient>
+                <radialGradient id="Gradient2" cx="50%" cy="50%" fx="2.68147%" fy="50%" r=".5">
+                    <animate attributeName="fx" dur="23.5s" values="0%;3%;0%" repeatCount="indefinite"></animate>
+                    <stop offset="0%" stop-color="rgba(255, 255, 0, 1)"></stop>
+                    <stop offset="100%" stop-color="rgba(255, 255, 0, 0)"></stop>
+                </radialGradient>
+                <radialGradient id="Gradient3" cx="50%" cy="50%" fx="0.836536%" fy="50%" r=".5">
+                    <animate attributeName="fx" dur="21.5s" values="0%;3%;0%" repeatCount="indefinite"></animate>
+                    <stop offset="0%" stop-color="rgba(0, 255, 255, 1)"></stop>
+                    <stop offset="100%" stop-color="rgba(0, 255, 255, 0)"></stop>
+                </radialGradient>
+            </defs>
+            <rect x="13.744%" y="1.18473%" width="100%" height="100%" fill="url(#Gradient1)" transform="rotate(334.41 50 50)">
+                <animate attributeName="x" dur="20s" values="25%;0%;25%" repeatCount="indefinite"></animate>
+                <animate attributeName="y" dur="21s" values="0%;25%;0%" repeatCount="indefinite"></animate>
+                <animateTransform attributeName="transform" type="rotate" from="0 50 50" to="360 50 50" dur="7s" repeatCount="indefinite"></animateTransform>
+            </rect>
+            <rect x="-2.17916%" y="35.4267%" width="100%" height="100%" fill="url(#Gradient2)" transform="rotate(255.072 50 50)">
+                <animate attributeName="x" dur="23s" values="-25%;0%;-25%" repeatCount="indefinite"></animate>
+                <animate attributeName="y" dur="24s" values="0%;50%;0%" repeatCount="indefinite"></animate>
+                <animateTransform attributeName="transform" type="rotate" from="0 50 50" to="360 50 50" dur="12s" repeatCount="indefinite"></animateTransform>
+            </rect>
+        </svg>
+    </div>
+
+    <div class="carousel-container">
+        <!-- Image Carousel -->
+        <h2>Image Gallery</h2>
+        <div class="carousel" id="imageCarousel">
+            <button class="nav-button prev">&#10094;</button>
+            <button class="nav-button next">&#10095;</button>
+<ul class="carousel__list">
+    <li class="carousel__item" data-pos="0"><img src="https://i.ibb.co/MC6L8Pt/image.jpg" alt="Image 1"></li>
+    <li class="carousel__item" data-pos="1"><img src="https://i.ibb.co/NTNK7Dm/image.jpg" alt="Image 2"></li>
+    <li class="carousel__item" data-pos="2"><img src="https://i.ibb.co/1rF1HZd/image.jpg" alt="Image 3"></li>
+    <li class="carousel__item" data-pos="3"><img src="https://i.ibb.co/LkmzJPg/image.jpg" alt="Image 4"></li>
+    <li class="carousel__item" data-pos="4"><img src="https://i.ibb.co/r2S932r/image.jpg" alt="Image 5"></li>
+    <li class="carousel__item" data-pos="5"><img src="https://i.ibb.co/CBtLx4W/image.jpg" alt="Image 6"></li>
+    <li class="carousel__item" data-pos="6"><img src="https://i.ibb.co/4WgsyLB/image.jpg" alt="Image 7"></li>
+    <li class="carousel__item" data-pos="7"><img src="https://i.ibb.co/hZKnKP2/image.jpg" alt="Image 8"></li>
+    <li class="carousel__item" data-pos="8"><img src="https://i.ibb.co/vYWq8HC/image.jpg" alt="Image 9"></li>
+    <li class="carousel__item" data-pos="9"><img src="https://i.ibb.co/KhdmbP7/image.jpg" alt="Image 10"></li>
+    <li class="carousel__item" data-pos="10"><img src="https://i.ibb.co/sbQBkpB/image.jpg" alt="Image 11"></li>
+    <li class="carousel__item" data-pos="11"><img src="https://i.ibb.co/4ZMWw7r/image.jpg" alt="Image 12"></li>
+    <li class="carousel__item" data-pos="12"><img src="https://i.ibb.co/5kx3j1M/image.jpg" alt="Image 13"></li>
+    <li class="carousel__item" data-pos="13"><img src="https://i.ibb.co/jVqQRCY/image.jpg" alt="Image 14"></li>
+    <li class="carousel__item" data-pos="14"><img src="https://i.ibb.co/cC4423h/image.jpg" alt="Image 15"></li>
+    <li class="carousel__item" data-pos="15"><img src="https://i.ibb.co/7NTJ44C/image.jpg" alt="Image 16"></li>
+    <li class="carousel__item" data-pos="16"><img src="https://i.ibb.co/mFsqbVB/image.jpg" alt="Image 17"></li>
+    <li class="carousel__item" data-pos="17"><img src="https://i.ibb.co/Jt2Jxp0/image.jpg" alt="Image 18"></li>
+    <li class="carousel__item" data-pos="18"><img src="https://i.ibb.co/9nm4mv8/image.jpg" alt="Image 19"></li>
+    <li class="carousel__item" data-pos="19"><img src="https://i.ibb.co/1srCR4y/image.jpg" alt="Image 20"></li>
+    <li class="carousel__item" data-pos="20"><img src="https://i.ibb.co/8gnxdHP/image.jpg" alt="Image 21"></li>
+    <li class="carousel__item" data-pos="21"><img src="https://i.ibb.co/tw6y6G4/image.jpg" alt="Image 22"></li>
+    <li class="carousel__item" data-pos="22"><img src="https://i.ibb.co/jHctLjJ/image.jpg" alt="Image 23"></li>
+    <li class="carousel__item" data-pos="23"><img src="https://i.ibb.co/SVnJzfR/image.jpg" alt="Image 24"></li>
+    <li class="carousel__item" data-pos="24"><img src="https://i.ibb.co/7NTJ44C/image.jpg" alt="Image 25"></li>
+    <li class="carousel__item" data-pos="25"><img src="https://i.ibb.co/McKfGXb/image.jpg" alt="Image 26"></li>
+    <li class="carousel__item" data-pos="26"><img src="https://i.ibb.co/0Xsvgr7/image.jpg" alt="Image 27"></li>
+    <li class="carousel__item" data-pos="27"><img src="https://i.ibb.co/qRVzGDM/image.jpg" alt="Image 28"></li>
+    <li class="carousel__item" data-pos="28"><img src="https://i.ibb.co/WBsf8L8/image.jpg" alt="Image 29"></li>
+    <li class="carousel__item" data-pos="29"><img src="https://i.ibb.co/QJfcMgL/image.jpg" alt="Image 30"></li>
+    <li class="carousel__item" data-pos="30"><img src="https://i.ibb.co/xYrVD48/image.jpg" alt="Image 31"></li>
+    <li class="carousel__item" data-pos="31"><img src="https://i.ibb.co/H7Ygcs7/image.jpg" alt="Image 32"></li>
+    <li class="carousel__item" data-pos="32"><img src="https://i.ibb.co/JzYp0Vw/image.jpg" alt="Image 33"></li>
+    <li class="carousel__item" data-pos="33"><img src="https://i.ibb.co/jVHTYMP/image.jpg" alt="Image 34"></li>
+    <li class="carousel__item" data-pos="34"><img src="https://i.ibb.co/HK3NXkP/image.jpg" alt="Image 35"></li>
+    <li class="carousel__item" data-pos="35"><img src="https://i.ibb.co/mbt0jym/image.jpg" alt="Image 36"></li>
+    <li class="carousel__item" data-pos="36"><img src="https://i.ibb.co/R0kJR8g/image.jpg" alt="Image 37"></li>
+</ul>
+
+        </div>
+
+        <!-- Video Carousel -->
+        <h2>Video Gallery</h2>
+        <div class="carousel" id="videoCarousel">
+            <button class="nav-button prev">&#10094;</button>
+            <button class="nav-button next">&#10095;</button>
+            <ul class="carousel__list">
+<ul class="carousel__list">
+    <li class="carousel__item" data-pos="0">
+        <iframe src="https://www.youtube.com/embed/DmVAgJe7DTA" frameborder="0" allowfullscreen></iframe>
+    </li>
+    <li class="carousel__item" data-pos="1">
+        <iframe src="https://www.youtube.com/embed/LuvinCMwvBA" frameborder="0" allowfullscreen></iframe>
+    </li>
+    <li class="carousel__item" data-pos="2">
+        <iframe src="https://www.youtube.com/embed/fErYZvimqG4" frameborder="0" allowfullscreen></iframe>
+    </li>
+    <li class="carousel__item" data-pos="3">
+        <iframe src="https://www.youtube.com/embed/7-x8i0rpzzw" frameborder="0" allowfullscreen></iframe>
+    </li>
+    <li class="carousel__item" data-pos="4">
+        <iframe src="https://www.youtube.com/embed/iVjI2nIO0AY" frameborder="0" allowfullscreen></iframe>
+    </li>
+    <li class="carousel__item" data-pos="5">
+        <iframe src="https://www.youtube.com/embed/aQjzwZRceXM" frameborder="0" allowfullscreen></iframe>
+    </li>
+    <li class="carousel__item" data-pos="6">
+        <iframe src="https://www.youtube.com/embed/YwgyJmoxlYI" frameborder="0" allowfullscreen></iframe>
+    </li>
+    <li class="carousel__item" data-pos="7">
+        <iframe src="https://www.youtube.com/embed/h5ewtSRr2H4" frameborder="0" allowfullscreen></iframe>
+    </li>
+    <li class="carousel__item" data-pos="8">
+        <iframe src="https://www.youtube.com/embed/S-GeSip0WYE" frameborder="0" allowfullscreen></iframe>
+    </li>
+    <li class="carousel__item" data-pos="9">
+        <iframe src="https://www.youtube.com/embed/YT3qH4m4-bE" frameborder="0" allowfullscreen></iframe>
+    </li>
+    <li class="carousel__item" data-pos="10">
+        <iframe src="https://www.youtube.com/embed/uyHKrylOTY8" frameborder="0" allowfullscreen></iframe>
+    </li>
+    <li class="carousel__item" data-pos="11">
+        <iframe src="https://www.youtube.com/embed/QTJb6dGEXPw" frameborder="0" allowfullscreen></iframe>
+    </li>
+    <li class="carousel__item" data-pos="12">
+        <iframe src="https://www.youtube.com/embed/yVezM-vbN9E" frameborder="0" allowfullscreen></iframe>
+    </li>
+    <li class="carousel__item" data-pos="13">
+        <iframe src="https://www.youtube.com/embed/SVR4UixkAHo" frameborder="0" allowfullscreen></iframe>
+    </li>
+    <li class="carousel__item" data-pos="14">
+        <iframe src="https://www.youtube.com/embed/CO1xQ63iXUk" frameborder="0" allowfullscreen></iframe>
+    </li>
+    <li class="carousel__item" data-pos="15">
+        <iframe src="https://www.youtube.com/embed/TvxdTwJzP-s" frameborder="0" allowfullscreen></iframe>
+    </li>
+</ul>
+
+        </div>
+    </div>
+
+    <script>
+        function initCarousel(carouselId) {
+            const carousel = document.getElementById(carouselId);
+            const carouselList = carousel.querySelector('.carousel__list');
+            const carouselItems = carouselList.querySelectorAll('.carousel__item');
+            const elems = Array.from(carouselItems);
+            const prevButton = carousel.querySelector('.nav-button.prev');
+            const nextButton = carousel.querySelector('.nav-button.next');
+
+            const update = function(newActive) {
+                const newActivePos = parseInt(newActive.dataset.pos);
+
+                elems.forEach(item => {
+                    var currentPos = parseInt(item.dataset.pos);
+                    var newPos = currentPos - newActivePos;
+
+                    if (newPos < -2) {
+                        newPos += elems.length;
+                    } else if (newPos > 2) {
+                        newPos -= elems.length;
+                    }
+
+                    item.dataset.pos = newPos;
+                });
+            };
+
+            const moveCarousel = function(direction) {
+                const currentActive = carouselList.querySelector('[data-pos="0"]');
+                let newActive;
+
+                if (direction === 'next') {
+                    newActive = currentActive.nextElementSibling || elems[0];
+                } else {
+                    newActive = currentActive.previousElementSibling || elems[elems.length - 1];
+                }
+
+                update(newActive);
+            };
+
+            prevButton.addEventListener('click', () => moveCarousel('prev'));
+            nextButton.addEventListener('click', () => moveCarousel('next'));
+
+            carouselList.addEventListener('click', function (event) {
+                var newActive = event.target.closest('.carousel__item');
+                if (!newActive) return;
+                update(newActive);
+            });
+        }
+
+        // Initialize both carousels
+        initCarousel('imageCarousel');
+        initCarousel('videoCarousel');
+    </script>
+</body>
+</html>
